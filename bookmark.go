@@ -3,6 +3,7 @@ package main
 type Repository interface {
 	Add(bm Bookmark) error
 	Del(title string) error
+	Update(bm Bookmark) error
 	Ls() (Bookmarks, error)
 }
 

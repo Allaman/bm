@@ -42,6 +42,12 @@ bm [--path bookmarks.sqlite] ls
 bm [--path bookmarks.sqlite] del --name Google
 ```
 
+## Update bookmark
+
+```sh
+bm [--path bookmarks.sqlite] upd --url https://www.google2.com --name Google [--tags foo bar]
+```
+
 ## Search a bookmark
 
 `bm` does not come with a search included. There are better tools out there that can handle this, e.g. [fzf](https://github.com/junegunn/fzf). This is how I search for a bookmark:
@@ -77,6 +83,9 @@ Commands:
 
   ls [flags]
     List all bookmarks
+
+  upd --url=STRING --name=STRING [flags]
+    Update a bookmark
 
   version [flags]
     Show version information

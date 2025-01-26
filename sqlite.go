@@ -82,6 +82,49 @@ func (r *SQLiteRepository) Del(name string) error {
 	return nil
 }
 
+func (r *SQLiteRepository) Update(b Bookmark) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if rbErr := tx.Rollback(); rbErr != nil && err == nil {
+			err = fmt.Errorf("rollback error: %v", rbErr)
+		}
+	}()
+
+	// Update bookmark
+	result, err := tx.Exec("UPDATE bookmarks SET url = ? WHERE name = ?", b.URL, b.Name)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return fmt.Errorf("bookmark not found")
+	}
+
+	// Delete old tags
+	_, err = tx.Exec("DELETE FROM tags WHERE name = ?", b.Name)
+	if err != nil {
+		return err
+	}
+
+	// Insert new tags
+	for _, tag := range b.Tags {
+		_, err = tx.Exec("INSERT INTO tags (name, tag) VALUES (?, ?)", b.Name, tag)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
 func (r *SQLiteRepository) Ls() (Bookmarks, error) {
 	rows, err := r.db.Query(`
         SELECT b.name, b.url, GROUP_CONCAT(t.tag) as tags

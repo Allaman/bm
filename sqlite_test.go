@@ -143,6 +143,49 @@ func equalSlices(a, b []string) bool {
 	return true
 }
 
+func TestUpdate(t *testing.T) {
+	repo := setupTestDB(t)
+
+	initial := Bookmark{
+		Name: "Google",
+		URL:  "https://google.com",
+		Tags: []string{"search"},
+	}
+	if err := repo.Add(initial); err != nil {
+		t.Fatalf("failed to add initial bookmark: %v", err)
+	}
+
+	updated := Bookmark{
+		Name: "Google",
+		URL:  "https://google.co.uk",
+		Tags: []string{"search", "uk"},
+	}
+	if err := repo.Update(updated); err != nil {
+		t.Errorf("Update() error = %v", err)
+	}
+
+	result, err := repo.Ls()
+	if err != nil {
+		t.Fatalf("Ls() error = %v", err)
+	}
+
+	found := false
+	for _, bm := range result.Bookmarks {
+		if bm.Name == updated.Name {
+			found = true
+			if bm.URL != updated.URL {
+				t.Errorf("got URL %q, want %q", bm.URL, updated.URL)
+			}
+			if !equalSlices(bm.Tags, updated.Tags) {
+				t.Errorf("got tags %v, want %v", bm.Tags, updated.Tags)
+			}
+		}
+	}
+	if !found {
+		t.Errorf("bookmark %q not found", updated.Name)
+	}
+}
+
 func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
