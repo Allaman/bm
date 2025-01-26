@@ -1,6 +1,6 @@
 # BM
 
-<h1 align="center">bm </h1>
+<h1 align="center">bm 🗺️</h1>
 
 <div align="center">
   <p>
