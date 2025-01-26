@@ -18,7 +18,7 @@
 
 - For fun
 - Very minimalistic
-- Platform and browser independet (I run various browser (profiles))
+- Platform and browser independent (I run various browser (profiles))
 
 ## Add a bookmark
 
