@@ -1,0 +1,86 @@
+# BM
+
+<h1 align="center">bm </h1>
+
+<div align="center">
+  <p>
+    <img src="https://github.com/Allaman/bm/actions/workflows/release.yaml/badge.svg" alt="Release"/>
+    <img src="https://img.shields.io/github/repo-size/Allaman/bm" alt="size"/>
+    <img src="https://img.shields.io/github/issues/Allaman/bm" alt="issues"/>
+    <img src="https://img.shields.io/github/last-commit/Allaman/bm" alt="last commit"/>
+    <img src="https://img.shields.io/github/license/Allaman/bm" alt="license"/>
+    <img src="https://img.shields.io/github/v/release/Allaman/bm?sort=semver" alt="last release"/>
+  </p>
+ <em>Minimal bookmark management CLI.</em>
+</div>
+
+## Why
+
+- For fun
+- Very minimalistic
+- Platform and browser independet (I run various browser (profiles))
+
+## Add a bookmark
+
+Name must be unique as it is used as primary key.
+
+```sh
+bm [--path bookmarks.sqlite] add --url https://www.google.com --name Google [--tags foo bar]
+```
+
+(Tags have currently no purpose)
+
+## List bookmarks
+
+```sh
+bm [--path bookmarks.sqlite] ls
+```
+
+## Delete bookmark
+
+```sh
+bm [--path bookmarks.sqlite] del --name Google
+```
+
+## Search a bookmark
+
+`bm` does not come with a search included. There are better tools out there that can handle this, e.g. [fzf](https://github.com/junegunn/fzf). This is how I search for a bookmark:
+
+```sh
+bm --path $HOME/data/bookmarks.sqlite ls | fzf | awk -F';' '{print $2}' | ccopy
+```
+
+This command is mapped to a shortcut in [skhd](https://github.com/koekeishiya/skhd):
+
+```sh
+cmd - b : open -n /Applications/Ghostty.app --args --title=bm --command="bm --path $HOME/data/bookmarks.sqlite ls | fzf | awk -F';' '{print $2}' | ccopy"
+```
+
+## Synopsis
+
+```sh
+bm --help
+Usage: bm <command> [flags]
+
+A minimal bookmarking management CLI
+
+Flags:
+  -h, --help                  Show context-sensitive help.
+  -p, --path="./bm.sqlite"    Path to the sqlite database
+
+Commands:
+  add --url=STRING --name=STRING [flags]
+    Add a new bookmark
+
+  del --name=STRING [flags]
+    Delete a bookmark
+
+  ls [flags]
+    List all bookmarks
+
+  version [flags]
+    Show version information
+
+Run "bm <command> --help" for more information on a command.
+
+```
