@@ -14,6 +14,10 @@
  <em>Minimal bookmark management CLI.</em>
 </div>
 
+![screenshot](./screenshot.png)
+
+Above command is in my [dotfiles](https://github.com/Allaman/dots/blob/main/dot_local/bin/executable_search-bookmark.sh)
+
 ## Why
 
 - For fun
