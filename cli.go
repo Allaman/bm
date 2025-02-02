@@ -40,7 +40,16 @@ type UpdateCmd struct {
 	Tags []string `short:"t" help:"Tags for the bookmark"`
 }
 
-type LsCmd struct{}
+type LsCmd struct {
+	Separator string `short:"s" default:"|" help:"Separator (one character)"`
+}
+
+func (c *LsCmd) Validate() error {
+	if len(c.Separator) != 1 {
+		return fmt.Errorf("argument must be exactly one character, got %d characters", len(c.Separator))
+	}
+	return nil
+}
 
 func (c *AddCmd) Run(ctx *Context) error {
 	return ctx.Repository.Add(Bookmark{Name: c.Name, URL: c.URL, Tags: c.Tags})
@@ -52,7 +61,7 @@ func (c *LsCmd) Run(ctx *Context) error {
 		return err
 	}
 	for _, bm := range bookmarks.Bookmarks {
-		fmt.Printf("%s;%s\n", bm.Name, bm.URL)
+		fmt.Printf("%s%s%s\n", bm.Name, c.Separator, bm.URL)
 	}
 	return nil
 }

@@ -33,7 +33,7 @@ bm [--path bookmarks.sqlite] add --url https://www.google.com --name Google [--t
 ## List bookmarks
 
 ```sh
-bm [--path bookmarks.sqlite] ls
+bm [--path bookmarks.sqlite] ls [-s ";"]
 ```
 
 ## Delete bookmark
