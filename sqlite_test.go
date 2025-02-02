@@ -26,7 +26,7 @@ func TestAdd(t *testing.T) {
 			bm: Bookmark{
 				Name: "Google",
 				URL:  "https://google.com",
-				Tags: []string{"search", "web"},
+				Tags: []string{"Search", "web"},
 			},
 			wantErr: nil,
 		},

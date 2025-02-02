@@ -57,7 +57,7 @@ func (r *SQLiteRepository) Add(b Bookmark) error {
 	}
 
 	for _, tag := range b.Tags {
-		_, err = tx.Exec("INSERT INTO tags (name, tag) VALUES (?, ?)", b.Name, tag)
+		_, err = tx.Exec("INSERT INTO tags (name, tag) VALUES (?, ?)", b.Name, strings.ToLower(tag))
 		if err != nil {
 			return err
 		}
@@ -116,7 +116,7 @@ func (r *SQLiteRepository) Update(b Bookmark) error {
 
 	// Insert new tags
 	for _, tag := range b.Tags {
-		_, err = tx.Exec("INSERT INTO tags (name, tag) VALUES (?, ?)", b.Name, tag)
+		_, err = tx.Exec("INSERT INTO tags (name, tag) VALUES (?, ?)", b.Name, strings.ToLower(tag))
 		if err != nil {
 			return err
 		}
