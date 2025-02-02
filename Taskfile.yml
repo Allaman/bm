@@ -12,6 +12,7 @@ tasks:
     cmds:
       - task: fmt
       - task: lint
+      - task: test
       - task: vet
       - task: build
       - go install -ldflags "-s -w -X github.com/allaman/bm/cli.Version=0.1.0"
@@ -35,6 +36,11 @@ tasks:
     desc: Upgrade all dependencies
     cmds:
       - go get -u ./...
+
+  test:
+    desc: Run go test
+    cmds:
+      - go test
 
   vet:
     desc: Run go vet
