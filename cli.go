@@ -2,6 +2,12 @@ package main
 
 import "fmt"
 
+const (
+	ColorReset = "\033[0m"
+	ColorRed   = "\033[31m"
+	ColorGreen = "\033[32m"
+)
+
 type CLI struct {
 	Add     AddCmd     `cmd:"" help:"Add a new bookmark"`
 	Del     DelCmd     `cmd:"" help:"Delete a bookmark"`
@@ -42,6 +48,7 @@ type UpdateCmd struct {
 
 type LsCmd struct {
 	Separator string `short:"s" default:"|" help:"Separator (one character)"`
+	Colored   bool   `short:"c" default:"false" help:"Colored output"`
 }
 
 func (c *LsCmd) Validate() error {
@@ -61,7 +68,11 @@ func (c *LsCmd) Run(ctx *Context) error {
 		return err
 	}
 	for _, bm := range bookmarks.Bookmarks {
-		fmt.Printf("%s%s%s\n", bm.Name, c.Separator, bm.URL)
+		if c.Colored {
+			fmt.Printf("%s%s%s%s%s%s%s\n", ColorRed, bm.Name, ColorReset, c.Separator, ColorGreen, bm.URL, ColorReset)
+		} else {
+			fmt.Printf("%s%s%s\n", bm.Name, c.Separator, bm.URL)
+		}
 	}
 	return nil
 }
