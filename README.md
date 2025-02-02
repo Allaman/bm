@@ -54,16 +54,12 @@ bm [--path bookmarks.sqlite] upd --url https://www.google2.com --name Google [--
 
 ## Search a bookmark
 
-`bm` does not come with a search included. There are better tools out there that can handle this, e.g. [fzf](https://github.com/junegunn/fzf). This is how I search for a bookmark:
+`bm` does not come with a search included. There are better tools out there that can handle this, e.g. [fzf](https://github.com/junegunn/fzf). Above, right under the screenshot I linked the script that calls bm.
+
+This script is mapped to a shortcut in [skhd](https://github.com/koekeishiya/skhd):
 
 ```sh
-bm --path $HOME/data/bookmarks.sqlite ls | fzf | awk -F';' '{print $2}' | ccopy
-```
-
-This command is mapped to a shortcut in [skhd](https://github.com/koekeishiya/skhd):
-
-```sh
-cmd - b : open -n /Applications/Ghostty.app --args --title=bm --command="bm --path $HOME/data/bookmarks.sqlite ls | fzf | awk -F';' '{print $2}' | ccopy"
+cmd - b : open -n /Applications/Ghostty.app --args --title=bm --command="$HOME/.local/bin/search-bookmark.sh"
 ```
 
 ## Synopsis
