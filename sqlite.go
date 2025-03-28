@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -73,22 +74,31 @@ func (r *SQLiteRepository) Del(name string) error {
 	}
 	result, err := tx.Exec("DELETE FROM bookmarks WHERE name = ?", name)
 	if err != nil {
-		tx.Rollback()
+		if rbErr := tx.Rollback(); rbErr != nil {
+			log.Printf("rollback failed: %v", rbErr)
+			return fmt.Errorf("delete failed: %v, rollback failed: %v", err, rbErr)
+		}
 		return err
 	}
 
 	rows, err := result.RowsAffected()
 	if err != nil {
-		tx.Rollback()
+		if rbErr := tx.Rollback(); rbErr != nil {
+			log.Printf("rollback failed: %v", rbErr)
+			return fmt.Errorf("delete failed: %v, rollback failed: %v", err, rbErr)
+		}
 		return err
 	}
 	if rows == 0 {
 		return fmt.Errorf("bookmark not found")
 	}
 
-	result, err = tx.Exec("DELETE FROM tags WHERE name = ?", name)
+	_, err = tx.Exec("DELETE FROM tags WHERE name = ?", name)
 	if err != nil {
-		tx.Rollback()
+		if rbErr := tx.Rollback(); rbErr != nil {
+			log.Printf("rollback failed: %v", rbErr)
+			return fmt.Errorf("delete failed: %v, rollback failed: %v", err, rbErr)
+		}
 		return err
 	}
 	return tx.Commit()
@@ -146,7 +156,12 @@ func (r *SQLiteRepository) Ls() (Bookmarks, error) {
 	if err != nil {
 		return Bookmarks{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Printf("error closing rows: %v", err)
+		}
+	}()
 
 	var bookmarks Bookmarks
 	for rows.Next() {
