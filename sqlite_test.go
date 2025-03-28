@@ -57,9 +57,16 @@ func TestAdd(t *testing.T) {
 func TestDel(t *testing.T) {
 	repo := setupTestDB(t)
 
+	// Add a test bookmark
 	bm := Bookmark{Name: "Test", URL: "https://test.com"}
 	if err := repo.Add(bm); err != nil {
 		t.Fatalf("failed to add test bookmark: %v", err)
+	}
+
+	// Add a tag for the test bookmark
+	_, err := repo.db.Exec("INSERT INTO tags (name, tag) VALUES (?, ?)", "Test", "testtag")
+	if err != nil {
+		t.Fatalf("failed to add tag: %v", err)
 	}
 
 	tests := []struct {
@@ -84,6 +91,27 @@ func TestDel(t *testing.T) {
 			err := repo.Del(tt.bookmark)
 			if (err != nil) != tt.wantError {
 				t.Errorf("Del() error = %v, wantError %v", err, tt.wantError)
+			}
+
+			if !tt.wantError {
+				// Verify bookmark was deleted
+				var count int
+				err = repo.db.QueryRow("SELECT COUNT(*) FROM bookmarks WHERE name = ?", tt.bookmark).Scan(&count)
+				if err != nil {
+					t.Fatalf("failed to query bookmarks: %v", err)
+				}
+				if count != 0 {
+					t.Errorf("bookmark was not deleted from bookmarks table")
+				}
+
+				// Verify tag was deleted
+				err = repo.db.QueryRow("SELECT COUNT(*) FROM tags WHERE name = ?", tt.bookmark).Scan(&count)
+				if err != nil {
+					t.Fatalf("failed to query tags table: %v", err)
+				}
+				if count != 0 {
+					t.Errorf("tag entry was not deleted from tags table")
+				}
 			}
 		})
 	}

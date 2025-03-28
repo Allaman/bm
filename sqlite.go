@@ -67,19 +67,31 @@ func (r *SQLiteRepository) Add(b Bookmark) error {
 }
 
 func (r *SQLiteRepository) Del(name string) error {
-	result, err := r.db.Exec("DELETE FROM bookmarks WHERE name = ?", name)
+	tx, err := r.db.Begin()
 	if err != nil {
+		return err
+	}
+	result, err := tx.Exec("DELETE FROM bookmarks WHERE name = ?", name)
+	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
 	rows, err := result.RowsAffected()
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 	if rows == 0 {
 		return fmt.Errorf("bookmark not found")
 	}
-	return nil
+
+	result, err = tx.Exec("DELETE FROM tags WHERE name = ?", name)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r *SQLiteRepository) Update(b Bookmark) error {
