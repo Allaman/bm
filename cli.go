@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 const (
 	ColorReset = "\033[0m"
@@ -53,6 +56,7 @@ type LsCmd struct {
 	Separator       string `short:"s" default:"|" help:"Separator (one character)"`
 	Colored         bool   `short:"c" default:"false" help:"Colored output"`
 	IncludeArchived bool   `short:"a" default:"false" help:"Include archived bookmarks"`
+	ShowTags        bool   `short:"t" default:"false" help:"Show tags"`
 }
 
 func (c *LsCmd) Validate() error {
@@ -72,10 +76,15 @@ func (c *LsCmd) Run(ctx *Context) error {
 		return err
 	}
 	for _, bm := range bookmarks.Bookmarks {
+		tags := ""
+		if c.ShowTags && len(bm.Tags) > 0 {
+			tags = c.Separator + strings.Join(bm.Tags, ",")
+		}
+
 		if c.Colored {
-			fmt.Printf("%s%s%s%s%s%s%s\n", ColorRed, bm.Name, ColorReset, c.Separator, ColorGreen, bm.URL, ColorReset)
+			fmt.Printf("%s%s%s%s%s%s%s%s\n", ColorRed, bm.Name, ColorReset, c.Separator, ColorGreen, bm.URL, ColorReset, tags)
 		} else {
-			fmt.Printf("%s%s%s\n", bm.Name, c.Separator, bm.URL)
+			fmt.Printf("%s%s%s%s\n", bm.Name, c.Separator, bm.URL, tags)
 		}
 	}
 	return nil
