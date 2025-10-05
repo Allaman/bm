@@ -22,7 +22,8 @@ func NewSQLiteRepository(path string) (*SQLiteRepository, error) {
 	createTables := `
 		CREATE TABLE IF NOT EXISTS bookmarks (
 				name TEXT PRIMARY KEY,
-				url TEXT
+				url TEXT,
+				archived INTEGER DEFAULT 0
 		);
 		CREATE TABLE IF NOT EXISTS tags (
 				name TEXT,
@@ -32,7 +33,20 @@ func NewSQLiteRepository(path string) (*SQLiteRepository, error) {
 		);
 	`
 	_, err = db.Exec(createTables)
-	return &SQLiteRepository{db: db}, err
+	if err != nil {
+		return nil, err
+	}
+
+	// Migration: Add archived column if it doesn't exist
+	_, err = db.Exec(`
+		ALTER TABLE bookmarks ADD COLUMN archived INTEGER DEFAULT 0
+	`)
+	// Ignore error if column already exists
+	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+		return nil, err
+	}
+
+	return &SQLiteRepository{db: db}, nil
 }
 
 var ErrDuplicateURL = errors.New("name already exists")
@@ -49,7 +63,11 @@ func (r *SQLiteRepository) Add(b Bookmark) error {
 		}
 	}()
 
-	_, err = tx.Exec("INSERT INTO bookmarks (name, url) VALUES (?, ?)", b.Name, b.URL)
+	archived := 0
+	if b.Archived {
+		archived = 1
+	}
+	_, err = tx.Exec("INSERT INTO bookmarks (name, url, archived) VALUES (?, ?, ?)", b.Name, b.URL, archived)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return ErrDuplicateURL
@@ -104,7 +122,7 @@ func (r *SQLiteRepository) Del(name string) error {
 	return tx.Commit()
 }
 
-func (r *SQLiteRepository) Update(b Bookmark) error {
+func (r *SQLiteRepository) Update(b Bookmark, updateArchived bool) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -116,8 +134,32 @@ func (r *SQLiteRepository) Update(b Bookmark) error {
 		}
 	}()
 
-	// Update bookmark
-	result, err := tx.Exec("UPDATE bookmarks SET url = ? WHERE name = ?", b.URL, b.Name)
+	// Build dynamic update query
+	updates := []string{}
+	args := []any{}
+
+	if b.URL != "" {
+		updates = append(updates, "url = ?")
+		args = append(args, b.URL)
+	}
+
+	if updateArchived {
+		updates = append(updates, "archived = ?")
+		archivedInt := 0
+		if b.Archived {
+			archivedInt = 1
+		}
+		args = append(args, archivedInt)
+	}
+
+	if len(updates) == 0 {
+		return fmt.Errorf("no fields to update")
+	}
+
+	query := "UPDATE bookmarks SET " + strings.Join(updates, ", ") + " WHERE name = ?"
+	args = append(args, b.Name)
+
+	result, err := tx.Exec(query, args...)
 	if err != nil {
 		return err
 	}
@@ -130,29 +172,37 @@ func (r *SQLiteRepository) Update(b Bookmark) error {
 		return fmt.Errorf("bookmark not found")
 	}
 
-	// Delete old tags
-	_, err = tx.Exec("DELETE FROM tags WHERE name = ?", b.Name)
-	if err != nil {
-		return err
-	}
-
-	// Insert new tags
-	for _, tag := range b.Tags {
-		_, err = tx.Exec("INSERT INTO tags (name, tag) VALUES (?, ?)", b.Name, strings.ToLower(tag))
+	// Only update tags if provided
+	if len(b.Tags) > 0 {
+		// Delete old tags
+		_, err = tx.Exec("DELETE FROM tags WHERE name = ?", b.Name)
 		if err != nil {
 			return err
+		}
+
+		// Insert new tags
+		for _, tag := range b.Tags {
+			_, err = tx.Exec("INSERT INTO tags (name, tag) VALUES (?, ?)", b.Name, strings.ToLower(tag))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	return tx.Commit()
 }
 
-func (r *SQLiteRepository) Ls() (Bookmarks, error) {
-	rows, err := r.db.Query(`
-        SELECT b.name, b.url, GROUP_CONCAT(t.tag) as tags
+func (r *SQLiteRepository) Ls(includeArchived bool) (Bookmarks, error) {
+	query := `
+        SELECT b.name, b.url, b.archived, GROUP_CONCAT(t.tag) as tags
         FROM bookmarks b
-        LEFT JOIN tags t ON b.name = t.name
-        GROUP BY b.name, b.url`)
+        LEFT JOIN tags t ON b.name = t.name`
+	if !includeArchived {
+		query += ` WHERE b.archived = 0`
+	}
+	query += ` GROUP BY b.name, b.url, b.archived`
+
+	rows, err := r.db.Query(query)
 	if err != nil {
 		return Bookmarks{}, err
 	}
@@ -167,9 +217,11 @@ func (r *SQLiteRepository) Ls() (Bookmarks, error) {
 	for rows.Next() {
 		var b Bookmark
 		var tags sql.NullString
-		if err := rows.Scan(&b.Name, &b.URL, &tags); err != nil {
+		var archived int
+		if err := rows.Scan(&b.Name, &b.URL, &archived, &tags); err != nil {
 			return Bookmarks{}, err
 		}
+		b.Archived = archived != 0
 		if tags.Valid {
 			b.Tags = strings.Split(tags.String, ",")
 		}

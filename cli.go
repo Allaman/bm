@@ -31,9 +31,10 @@ type Context struct {
 }
 
 type AddCmd struct {
-	URL  string   `short:"u" required:"" help:"URL of the bookmark"`
-	Name string   `short:"n" required:"" help:"Name of the bookmark (must be unique)"`
-	Tags []string `short:"t" help:"Tags for the bookmark"`
+	URL      string   `short:"u" required:"" help:"URL of the bookmark"`
+	Name     string   `short:"n" required:"" help:"Name of the bookmark (must be unique)"`
+	Tags     []string `short:"t" help:"Tags for the bookmark"`
+	Archived bool     `short:"a" default:"false" help:"Mark bookmark as archived"`
 }
 
 type DelCmd struct {
@@ -41,14 +42,17 @@ type DelCmd struct {
 }
 
 type UpdateCmd struct {
-	URL  string   `short:"u" required:"" help:"URL of the bookmark"`
-	Name string   `short:"n" required:"" help:"Name of the bookmark (must be unique)"`
-	Tags []string `short:"t" help:"Tags for the bookmark"`
+	URL       string   `short:"u" help:"URL of the bookmark"`
+	Name      string   `short:"n" required:"" help:"Name of the bookmark (must be unique)"`
+	Tags      []string `short:"t" help:"Tags for the bookmark"`
+	Archive   bool     `short:"a" help:"Mark bookmark as archived"`
+	Unarchive bool     `help:"Mark bookmark as not archived"`
 }
 
 type LsCmd struct {
-	Separator string `short:"s" default:"|" help:"Separator (one character)"`
-	Colored   bool   `short:"c" default:"false" help:"Colored output"`
+	Separator       string `short:"s" default:"|" help:"Separator (one character)"`
+	Colored         bool   `short:"c" default:"false" help:"Colored output"`
+	IncludeArchived bool   `short:"a" default:"false" help:"Include archived bookmarks"`
 }
 
 func (c *LsCmd) Validate() error {
@@ -59,11 +63,11 @@ func (c *LsCmd) Validate() error {
 }
 
 func (c *AddCmd) Run(ctx *Context) error {
-	return ctx.Repository.Add(Bookmark{Name: c.Name, URL: c.URL, Tags: c.Tags})
+	return ctx.Repository.Add(Bookmark{Name: c.Name, URL: c.URL, Tags: c.Tags, Archived: c.Archived})
 }
 
 func (c *LsCmd) Run(ctx *Context) error {
-	bookmarks, err := ctx.Repository.Ls()
+	bookmarks, err := ctx.Repository.Ls(c.IncludeArchived)
 	if err != nil {
 		return err
 	}
@@ -82,5 +86,7 @@ func (c *DelCmd) Run(ctx *Context) error {
 }
 
 func (c *UpdateCmd) Run(ctx *Context) error {
-	return ctx.Repository.Update(Bookmark{Name: c.Name, URL: c.URL, Tags: c.Tags})
+	updateArchived := c.Archive || c.Unarchive
+	archived := c.Archive && !c.Unarchive
+	return ctx.Repository.Update(Bookmark{Name: c.Name, URL: c.URL, Tags: c.Tags, Archived: archived}, updateArchived)
 }

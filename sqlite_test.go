@@ -131,7 +131,7 @@ func TestLs(t *testing.T) {
 		}
 	}
 
-	result, err := repo.Ls()
+	result, err := repo.Ls(true)
 	if err != nil {
 		t.Fatalf("Ls() error = %v", err)
 	}
@@ -188,11 +188,11 @@ func TestUpdate(t *testing.T) {
 		URL:  "https://google.co.uk",
 		Tags: []string{"search", "uk"},
 	}
-	if err := repo.Update(updated); err != nil {
+	if err := repo.Update(updated, false); err != nil {
 		t.Errorf("Update() error = %v", err)
 	}
 
-	result, err := repo.Ls()
+	result, err := repo.Ls(true)
 	if err != nil {
 		t.Fatalf("Ls() error = %v", err)
 	}
@@ -212,6 +212,60 @@ func TestUpdate(t *testing.T) {
 	if !found {
 		t.Errorf("bookmark %q not found", updated.Name)
 	}
+}
+
+func TestArchivedFiltering(t *testing.T) {
+	repo := setupTestDB(t)
+
+	bookmarks := []Bookmark{
+		{Name: "Active1", URL: "https://active1.com", Archived: false},
+		{Name: "Active2", URL: "https://active2.com", Archived: false},
+		{Name: "Archived1", URL: "https://archived1.com", Archived: true},
+	}
+
+	for _, bm := range bookmarks {
+		if err := repo.Add(bm); err != nil {
+			t.Fatalf("failed to add test bookmark: %v", err)
+		}
+	}
+
+	t.Run("exclude archived", func(t *testing.T) {
+		result, err := repo.Ls(false)
+		if err != nil {
+			t.Fatalf("Ls(false) error = %v", err)
+		}
+
+		if len(result.Bookmarks) != 2 {
+			t.Errorf("got %d bookmarks, want 2", len(result.Bookmarks))
+		}
+
+		for _, bm := range result.Bookmarks {
+			if bm.Archived {
+				t.Errorf("found archived bookmark %q in non-archived list", bm.Name)
+			}
+		}
+	})
+
+	t.Run("include archived", func(t *testing.T) {
+		result, err := repo.Ls(true)
+		if err != nil {
+			t.Fatalf("Ls(true) error = %v", err)
+		}
+
+		if len(result.Bookmarks) != 3 {
+			t.Errorf("got %d bookmarks, want 3", len(result.Bookmarks))
+		}
+
+		archivedCount := 0
+		for _, bm := range result.Bookmarks {
+			if bm.Archived {
+				archivedCount++
+			}
+		}
+		if archivedCount != 1 {
+			t.Errorf("got %d archived bookmarks, want 1", archivedCount)
+		}
+	})
 }
 
 func TestMain(m *testing.M) {
