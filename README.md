@@ -29,15 +29,13 @@ Above command is in my [dotfiles](https://github.com/Allaman/dots/blob/main/dot_
 Name must be unique as it is used as primary key.
 
 ```sh
-bm [--path bookmarks.sqlite] add --url https://www.google.com --name Google [--tags foo bar]
+bm [--path bookmarks.sqlite] add --url https://www.google.com --name Google [--tags foo bar --archive]
 ```
-
-(Tags have currently no purpose)
 
 ## List bookmarks
 
 ```sh
-bm [--path bookmarks.sqlite] ls [-s ";" -c]
+bm [--path bookmarks.sqlite] ls [-s ";" -c -a -t]
 ```
 
 ## Delete bookmark
@@ -49,7 +47,7 @@ bm [--path bookmarks.sqlite] del --name Google
 ## Update bookmark
 
 ```sh
-bm [--path bookmarks.sqlite] upd --url https://www.google2.com --name Google [--tags foo bar]
+bm [--path bookmarks.sqlite] upd --url https://www.google2.com --name Google [--tags foo bar --unarchive]
 ```
 
 ## Search a bookmark
@@ -84,12 +82,11 @@ Commands:
   ls [flags]
     List all bookmarks
 
-  upd --url=STRING --name=STRING [flags]
+  upd --name=STRING [flags]
     Update a bookmark
 
   version [flags]
     Show version information
 
 Run "bm <command> --help" for more information on a command.
-
 ```
