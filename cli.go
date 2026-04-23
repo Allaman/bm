@@ -67,6 +67,16 @@ func (c *LsCmd) Validate() error {
 	return nil
 }
 
+func (c *UpdateCmd) Validate() error {
+	if c.Archive && c.Unarchive {
+		return fmt.Errorf("--archive and --unarchive are mutually exclusive")
+	}
+	if c.URL == "" && !c.Archive && !c.Unarchive && len(c.Tags) == 0 {
+		return fmt.Errorf("at least one of --url, --tags, --archive, or --unarchive must be specified")
+	}
+	return nil
+}
+
 func (c *AddCmd) Run(ctx *Context) error {
 	return ctx.Repository.Add(Bookmark{Name: c.Name, URL: c.URL, Tags: c.Tags, Archived: c.Archived})
 }
