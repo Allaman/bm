@@ -37,13 +37,19 @@ func NewSQLiteRepository(path string) (*SQLiteRepository, error) {
 		return nil, err
 	}
 
-	// Migration: Add archived column if it doesn't exist
-	_, err = db.Exec(`
-		ALTER TABLE bookmarks ADD COLUMN archived INTEGER DEFAULT 0
-	`)
-	// Ignore error if column already exists
-	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+	if _, err = db.Exec("PRAGMA foreign_keys = ON"); err != nil {
 		return nil, err
+	}
+
+	// Migration: Add archived column if it doesn't exist
+	var count int
+	if err = db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('bookmarks') WHERE name='archived'`).Scan(&count); err != nil {
+		return nil, err
+	}
+	if count == 0 {
+		if _, err = db.Exec(`ALTER TABLE bookmarks ADD COLUMN archived INTEGER DEFAULT 0`); err != nil {
+			return nil, err
+		}
 	}
 
 	return &SQLiteRepository{db: db}, nil
