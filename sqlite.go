@@ -225,5 +225,8 @@ func (r *SQLiteRepository) Ls(includeArchived bool) ([]Bookmark, error) {
 		}
 		bookmarks = append(bookmarks, b)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return bookmarks, nil
 }
