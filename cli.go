@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 )
 
 const (
@@ -60,8 +61,8 @@ type LsCmd struct {
 }
 
 func (c *LsCmd) Validate() error {
-	if len(c.Separator) != 1 {
-		return fmt.Errorf("argument must be exactly one character, got %d characters", len(c.Separator))
+	if utf8.RuneCountInString(c.Separator) != 1 {
+		return fmt.Errorf("separator must be exactly one character, got %d", utf8.RuneCountInString(c.Separator))
 	}
 	return nil
 }
