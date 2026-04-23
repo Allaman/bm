@@ -36,7 +36,7 @@ func TestAdd(t *testing.T) {
 				Name: "Google",
 				URL:  "https://different.com",
 			},
-			wantErr: ErrDuplicateURL,
+			wantErr: ErrDuplicateName,
 		},
 	}
 

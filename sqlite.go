@@ -55,7 +55,7 @@ func NewSQLiteRepository(path string) (*SQLiteRepository, error) {
 	return &SQLiteRepository{db: db}, nil
 }
 
-var ErrDuplicateURL = errors.New("name already exists")
+var ErrDuplicateName = errors.New("name already exists")
 
 func (r *SQLiteRepository) Add(b Bookmark) error {
 	tx, err := r.db.Begin()
@@ -76,7 +76,7 @@ func (r *SQLiteRepository) Add(b Bookmark) error {
 	_, err = tx.Exec("INSERT INTO bookmarks (name, url, archived) VALUES (?, ?, ?)", b.Name, b.URL, archived)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-			return ErrDuplicateURL
+			return ErrDuplicateName
 		}
 		return err
 	}
