@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"os"
+	"slices"
 	"testing"
 )
 
@@ -43,12 +45,8 @@ func TestAdd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := repo.Add(tt.bm)
-			if err != tt.wantErr {
-				if err != nil && tt.wantErr != nil && err.Error() != tt.wantErr.Error() {
-					t.Errorf("Add() error = %v, want %v", err, tt.wantErr)
-				} else if (err == nil) != (tt.wantErr == nil) {
-					t.Errorf("Add() error = %v, want %v", err, tt.wantErr)
-				}
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("Add() error = %v, want %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -148,7 +146,7 @@ func TestLs(t *testing.T) {
 				if got.URL != want.URL {
 					t.Errorf("got URL %q, want %q", got.URL, want.URL)
 				}
-				if !equalSlices(got.Tags, want.Tags) {
+				if !slices.Equal(got.Tags, want.Tags) {
 					t.Errorf("got tags %v, want %v", got.Tags, want.Tags)
 				}
 			}
@@ -157,18 +155,6 @@ func TestLs(t *testing.T) {
 			t.Errorf("bookmark %q not found", want.Name)
 		}
 	}
-}
-
-func equalSlices(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }
 
 func TestUpdate(t *testing.T) {
@@ -204,7 +190,7 @@ func TestUpdate(t *testing.T) {
 			if bm.URL != updated.URL {
 				t.Errorf("got URL %q, want %q", bm.URL, updated.URL)
 			}
-			if !equalSlices(bm.Tags, updated.Tags) {
+			if !slices.Equal(bm.Tags, updated.Tags) {
 				t.Errorf("got tags %v, want %v", bm.Tags, updated.Tags)
 			}
 		}
