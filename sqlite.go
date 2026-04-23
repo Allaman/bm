@@ -192,7 +192,7 @@ func (r *SQLiteRepository) Update(b Bookmark, updateArchived bool) error {
 	return tx.Commit()
 }
 
-func (r *SQLiteRepository) Ls(includeArchived bool) (Bookmarks, error) {
+func (r *SQLiteRepository) Ls(includeArchived bool) ([]Bookmark, error) {
 	query := `
         SELECT b.name, b.url, b.archived, GROUP_CONCAT(t.tag) as tags
         FROM bookmarks b
@@ -204,28 +204,27 @@ func (r *SQLiteRepository) Ls(includeArchived bool) (Bookmarks, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
-		return Bookmarks{}, err
+		return nil, err
 	}
 	defer func() {
-		err := rows.Close()
-		if err != nil {
+		if err := rows.Close(); err != nil {
 			log.Printf("error closing rows: %v", err)
 		}
 	}()
 
-	var bookmarks Bookmarks
+	var bookmarks []Bookmark
 	for rows.Next() {
 		var b Bookmark
 		var tags sql.NullString
 		var archived int
 		if err := rows.Scan(&b.Name, &b.URL, &archived, &tags); err != nil {
-			return Bookmarks{}, err
+			return nil, err
 		}
 		b.Archived = archived != 0
 		if tags.Valid {
 			b.Tags = strings.Split(tags.String, ",")
 		}
-		bookmarks.Bookmarks = append(bookmarks.Bookmarks, b)
+		bookmarks = append(bookmarks, b)
 	}
 	return bookmarks, nil
 }

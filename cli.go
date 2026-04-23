@@ -75,7 +75,7 @@ func (c *LsCmd) Run(ctx *Context) error {
 	if err != nil {
 		return err
 	}
-	for _, bm := range bookmarks.Bookmarks {
+	for _, bm := range bookmarks {
 		tags := ""
 		if c.ShowTags && len(bm.Tags) > 0 {
 			tags = c.Separator + strings.Join(bm.Tags, ",")

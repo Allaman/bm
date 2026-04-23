@@ -136,13 +136,13 @@ func TestLs(t *testing.T) {
 		t.Fatalf("Ls() error = %v", err)
 	}
 
-	if len(result.Bookmarks) != len(bookmarks) {
-		t.Errorf("got %d bookmarks, want %d", len(result.Bookmarks), len(bookmarks))
+	if len(result) != len(bookmarks) {
+		t.Errorf("got %d bookmarks, want %d", len(result), len(bookmarks))
 	}
 
 	for _, want := range bookmarks {
 		found := false
-		for _, got := range result.Bookmarks {
+		for _, got := range result {
 			if got.Name == want.Name {
 				found = true
 				if got.URL != want.URL {
@@ -198,7 +198,7 @@ func TestUpdate(t *testing.T) {
 	}
 
 	found := false
-	for _, bm := range result.Bookmarks {
+	for _, bm := range result {
 		if bm.Name == updated.Name {
 			found = true
 			if bm.URL != updated.URL {
@@ -235,11 +235,11 @@ func TestArchivedFiltering(t *testing.T) {
 			t.Fatalf("Ls(false) error = %v", err)
 		}
 
-		if len(result.Bookmarks) != 2 {
-			t.Errorf("got %d bookmarks, want 2", len(result.Bookmarks))
+		if len(result) != 2 {
+			t.Errorf("got %d bookmarks, want 2", len(result))
 		}
 
-		for _, bm := range result.Bookmarks {
+		for _, bm := range result {
 			if bm.Archived {
 				t.Errorf("found archived bookmark %q in non-archived list", bm.Name)
 			}
@@ -252,12 +252,12 @@ func TestArchivedFiltering(t *testing.T) {
 			t.Fatalf("Ls(true) error = %v", err)
 		}
 
-		if len(result.Bookmarks) != 3 {
-			t.Errorf("got %d bookmarks, want 3", len(result.Bookmarks))
+		if len(result) != 3 {
+			t.Errorf("got %d bookmarks, want 3", len(result))
 		}
 
 		archivedCount := 0
-		for _, bm := range result.Bookmarks {
+		for _, bm := range result {
 			if bm.Archived {
 				archivedCount++
 			}
