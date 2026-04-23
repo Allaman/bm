@@ -64,7 +64,7 @@ func (r *SQLiteRepository) Add(b Bookmark) error {
 	}
 
 	defer func() {
-		if rbErr := tx.Rollback(); rbErr != nil && err == nil {
+		if rbErr := tx.Rollback(); rbErr != nil && !errors.Is(rbErr, sql.ErrTxDone) && err == nil {
 			err = fmt.Errorf("rollback error: %v", rbErr)
 		}
 	}()
@@ -96,35 +96,28 @@ func (r *SQLiteRepository) Del(name string) error {
 	if err != nil {
 		return err
 	}
-	result, err := tx.Exec("DELETE FROM bookmarks WHERE name = ?", name)
-	if err != nil {
-		if rbErr := tx.Rollback(); rbErr != nil {
-			log.Printf("rollback failed: %v", rbErr)
-			return fmt.Errorf("delete failed: %v, rollback failed: %v", err, rbErr)
+	defer func() {
+		if rbErr := tx.Rollback(); rbErr != nil && !errors.Is(rbErr, sql.ErrTxDone) && err == nil {
+			err = fmt.Errorf("rollback error: %v", rbErr)
 		}
+	}()
+
+	var result sql.Result
+	result, err = tx.Exec("DELETE FROM bookmarks WHERE name = ?", name)
+	if err != nil {
 		return err
 	}
 
-	rows, err := result.RowsAffected()
+	var rows int64
+	rows, err = result.RowsAffected()
 	if err != nil {
-		if rbErr := tx.Rollback(); rbErr != nil {
-			log.Printf("rollback failed: %v", rbErr)
-			return fmt.Errorf("delete failed: %v, rollback failed: %v", err, rbErr)
-		}
 		return err
 	}
 	if rows == 0 {
-		return fmt.Errorf("bookmark not found")
-	}
-
-	_, err = tx.Exec("DELETE FROM tags WHERE name = ?", name)
-	if err != nil {
-		if rbErr := tx.Rollback(); rbErr != nil {
-			log.Printf("rollback failed: %v", rbErr)
-			return fmt.Errorf("delete failed: %v, rollback failed: %v", err, rbErr)
-		}
+		err = fmt.Errorf("bookmark not found")
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -135,7 +128,7 @@ func (r *SQLiteRepository) Update(b Bookmark, updateArchived bool) error {
 	}
 
 	defer func() {
-		if rbErr := tx.Rollback(); rbErr != nil && err == nil {
+		if rbErr := tx.Rollback(); rbErr != nil && !errors.Is(rbErr, sql.ErrTxDone) && err == nil {
 			err = fmt.Errorf("rollback error: %v", rbErr)
 		}
 	}()
