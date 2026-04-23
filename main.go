@@ -18,12 +18,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ctx.Run(&Context{Repository: repository})
-	ctx.FatalIfErrorf(err)
 	defer func() {
-		err := repository.db.Close()
-		if err != nil {
+		if err := repository.db.Close(); err != nil {
 			log.Printf("error closing database connection: %v", err)
 		}
 	}()
+	err = ctx.Run(&Context{Repository: repository})
+	ctx.FatalIfErrorf(err)
 }
