@@ -15,10 +15,11 @@ type SQLiteRepository struct {
 }
 
 func NewSQLiteRepository(path string) (*SQLiteRepository, error) {
-	db, err := sql.Open("sqlite3", path)
+	db, err := sql.Open("sqlite3", path+"?_foreign_keys=on")
 	if err != nil {
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
 	createTables := `
 		CREATE TABLE IF NOT EXISTS bookmarks (
 				name TEXT PRIMARY KEY,
@@ -34,10 +35,6 @@ func NewSQLiteRepository(path string) (*SQLiteRepository, error) {
 	`
 	_, err = db.Exec(createTables)
 	if err != nil {
-		return nil, err
-	}
-
-	if _, err = db.Exec("PRAGMA foreign_keys = ON"); err != nil {
 		return nil, err
 	}
 
