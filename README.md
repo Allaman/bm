@@ -29,13 +29,13 @@ Above command is in my [dotfiles](https://github.com/Allaman/dots/blob/main/dot_
 Name must be unique as it is used as primary key.
 
 ```sh
-bm [--path bookmarks.sqlite] add --url https://www.google.com --name Google [--tags foo bar --archive]
+bm [--path bookmarks.sqlite] add --url https://www.google.com --name Google [--tags foo bar --archive --browser zen-work]
 ```
 
 ## List bookmarks
 
 ```sh
-bm [--path bookmarks.sqlite] ls [-s ";" -c -a -t]
+bm [--path bookmarks.sqlite] ls [-s ";" -c -a -t -b]
 ```
 
 ## Delete bookmark
@@ -47,7 +47,32 @@ bm [--path bookmarks.sqlite] del --name Google
 ## Update bookmark
 
 ```sh
-bm [--path bookmarks.sqlite] upd --url https://www.google2.com --name Google [--tags foo bar --unarchive]
+bm [--path bookmarks.sqlite] upd --url https://www.google2.com --name Google [--tags foo bar --unarchive --browser zen-work]
+```
+
+Pass `--browser ""` to remove the browser association from a bookmark.
+
+## Open a bookmark
+
+Opens the URL in the bookmark's configured browser profile. Falls back to the system default (`open`/`xdg-open`) when no profile is set.
+
+```sh
+bm [--path bookmarks.sqlite] open --name Google
+```
+
+## Browser profiles
+
+Browser profiles map a name to a binary and its arguments. Each `-a` flag is one argument passed directly to the binary, so arguments with spaces are handled correctly.
+
+```sh
+# Add a profile
+bm [--path bookmarks.sqlite] browser add --name zen-work --path /Applications/Zen.app/Contents/MacOS/zen -a -p -a work
+
+# List profiles
+bm [--path bookmarks.sqlite] browser ls
+
+# Delete a profile (bookmarks using it will have their association cleared)
+bm [--path bookmarks.sqlite] browser del --name zen-work
 ```
 
 ## Search a bookmark
@@ -84,6 +109,18 @@ Commands:
 
   upd --name=STRING [flags]
     Update a bookmark
+
+  open --name=STRING [flags]
+    Open a bookmark in its configured browser
+
+  browser add --name=STRING --path=STRING [flags]
+    Add a browser profile
+
+  browser del --name=STRING
+    Delete a browser profile
+
+  browser ls
+    List browser profiles
 
   version [flags]
     Show version information

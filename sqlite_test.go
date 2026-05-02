@@ -174,7 +174,7 @@ func TestUpdate(t *testing.T) {
 		URL:  "https://google.co.uk",
 		Tags: []string{"search", "uk"},
 	}
-	if err := repo.Update(updated, false); err != nil {
+	if err := repo.Update(updated, false, false); err != nil {
 		t.Errorf("Update() error = %v", err)
 	}
 
@@ -250,6 +250,116 @@ func TestArchivedFiltering(t *testing.T) {
 		}
 		if archivedCount != 1 {
 			t.Errorf("got %d archived bookmarks, want 1", archivedCount)
+		}
+	})
+}
+
+func TestBrowser(t *testing.T) {
+	repo := setupTestDB(t)
+
+	zen := Browser{Name: "zen-work", Path: "/Applications/Zen.app/Contents/MacOS/zen", Args: []string{"-p", "work"}}
+
+	t.Run("add browser", func(t *testing.T) {
+		if err := repo.AddBrowser(zen); err != nil {
+			t.Fatalf("AddBrowser() error = %v", err)
+		}
+	})
+
+	t.Run("duplicate browser", func(t *testing.T) {
+		if !errors.Is(repo.AddBrowser(zen), ErrDuplicateBrowser) {
+			t.Error("expected ErrDuplicateBrowser")
+		}
+	})
+
+	t.Run("list browsers", func(t *testing.T) {
+		browsers, err := repo.LsBrowsers()
+		if err != nil {
+			t.Fatalf("LsBrowsers() error = %v", err)
+		}
+		if len(browsers) != 1 {
+			t.Fatalf("got %d browsers, want 1", len(browsers))
+		}
+		if browsers[0].Name != zen.Name || browsers[0].Path != zen.Path || !slices.Equal(browsers[0].Args, zen.Args) {
+			t.Errorf("got %+v, want %+v", browsers[0], zen)
+		}
+	})
+
+	t.Run("get browser", func(t *testing.T) {
+		b, err := repo.GetBrowser(zen.Name)
+		if err != nil {
+			t.Fatalf("GetBrowser() error = %v", err)
+		}
+		if b.Path != zen.Path || !slices.Equal(b.Args, zen.Args) {
+			t.Errorf("got %+v, want %+v", b, zen)
+		}
+	})
+
+	t.Run("get nonexistent browser", func(t *testing.T) {
+		if _, err := repo.GetBrowser("nope"); err == nil {
+			t.Error("expected error for nonexistent browser")
+		}
+	})
+
+	t.Run("bookmark with browser", func(t *testing.T) {
+		bm := Bookmark{Name: "Work Google", URL: "https://google.com", BrowserName: zen.Name}
+		if err := repo.Add(bm); err != nil {
+			t.Fatalf("Add() error = %v", err)
+		}
+
+		got, err := repo.Get(bm.Name)
+		if err != nil {
+			t.Fatalf("Get() error = %v", err)
+		}
+		if got.BrowserName != zen.Name {
+			t.Errorf("got BrowserName %q, want %q", got.BrowserName, zen.Name)
+		}
+	})
+
+	t.Run("bookmark with invalid browser", func(t *testing.T) {
+		bm := Bookmark{Name: "Bad BM", URL: "https://example.com", BrowserName: "nonexistent"}
+		if err := repo.Add(bm); err == nil {
+			t.Error("expected error for nonexistent browser profile")
+		}
+	})
+
+	t.Run("update bookmark browser", func(t *testing.T) {
+		bm := Bookmark{Name: "Work Google", BrowserName: ""}
+		if err := repo.Update(bm, false, true); err != nil {
+			t.Fatalf("Update() error = %v", err)
+		}
+		got, err := repo.Get("Work Google")
+		if err != nil {
+			t.Fatalf("Get() error = %v", err)
+		}
+		if got.BrowserName != "" {
+			t.Errorf("expected BrowserName to be cleared, got %q", got.BrowserName)
+		}
+	})
+
+	t.Run("delete browser cascades to bookmarks", func(t *testing.T) {
+		// Re-associate the bookmark with the browser
+		bm := Bookmark{Name: "Work Google", BrowserName: zen.Name}
+		if err := repo.Update(bm, false, true); err != nil {
+			t.Fatalf("Update() error = %v", err)
+		}
+
+		// Delete the browser; ON DELETE SET NULL should clear the FK
+		if err := repo.DelBrowser(zen.Name); err != nil {
+			t.Fatalf("DelBrowser() error = %v", err)
+		}
+
+		got, err := repo.Get("Work Google")
+		if err != nil {
+			t.Fatalf("Get() error = %v", err)
+		}
+		if got.BrowserName != "" {
+			t.Errorf("expected BrowserName to be NULL after browser deletion, got %q", got.BrowserName)
+		}
+	})
+
+	t.Run("delete nonexistent browser", func(t *testing.T) {
+		if err := repo.DelBrowser("nope"); err == nil {
+			t.Error("expected error for nonexistent browser")
 		}
 	})
 }
