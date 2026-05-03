@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -69,6 +70,8 @@ type LsCmd struct {
 
 type OpenCmd struct {
 	Name string `short:"n" required:"" help:"Name of the bookmark to open"`
+	Wait bool   `help:"Wait for the browser command and report its exit status"`
+	Log  string `help:"Append browser command diagnostics to this file"`
 }
 
 type BrowserCmd struct {
@@ -169,7 +172,7 @@ func (c *OpenCmd) Run(ctx *Context) error {
 	}
 
 	if bm.BrowserName == "" {
-		return openDefault(bm.URL)
+		return openDefault(bm.URL, c.Wait, c.Log)
 	}
 
 	browser, err := ctx.Repository.GetBrowser(bm.BrowserName)
@@ -178,7 +181,7 @@ func (c *OpenCmd) Run(ctx *Context) error {
 	}
 
 	args := append(browser.Args, bm.URL)
-	return exec.Command(browser.Path, args...).Start()
+	return runBrowserCommand(browser.Path, args, c.Wait, c.Log)
 }
 
 func (c *BrowserAddCmd) Run(ctx *Context) error {
@@ -205,15 +208,58 @@ func (c *BrowserLsCmd) Run(ctx *Context) error {
 }
 
 // openDefault opens a URL using the OS default browser.
-func openDefault(url string) error {
-	var cmd *exec.Cmd
+func openDefault(url string, wait bool, logPath string) error {
 	switch runtime.GOOS {
 	case "darwin":
-		cmd = exec.Command("open", url)
+		return runBrowserCommand("open", []string{url}, wait, logPath)
 	case "linux":
-		cmd = exec.Command("xdg-open", url)
+		return runBrowserCommand("xdg-open", []string{url}, wait, logPath)
 	default:
 		return fmt.Errorf("unsupported platform %s: assign a browser profile to this bookmark", runtime.GOOS)
 	}
-	return cmd.Start()
+}
+
+func runBrowserCommand(path string, args []string, wait bool, logPath string) error {
+	cmd := exec.Command(path, args...)
+
+	logf, err := openLogFile(logPath)
+	if err != nil {
+		return err
+	}
+	if logf != nil {
+		defer func() { _ = logf.Close() }()
+		_, _ = fmt.Fprintf(logf, "command: %q\n", append([]string{path}, args...))
+		_, _ = fmt.Fprintf(logf, "wait: %t\n", wait)
+	}
+
+	if wait {
+		// executes cmd and waits for it to finish
+		output, err := cmd.CombinedOutput()
+		if logf != nil {
+			if len(output) > 0 {
+				_, _ = fmt.Fprintf(logf, "output:\n%s\n", output)
+			}
+			_, _ = fmt.Fprintf(logf, "exit error: %v\n\n", err)
+		}
+		return err
+	}
+
+	// executes cmd and return immediately
+	if err := cmd.Start(); err != nil {
+		if logf != nil {
+			_, _ = fmt.Fprintf(logf, "start error: %v\n\n", err)
+		}
+		return err
+	}
+	if logf != nil {
+		_, _ = fmt.Fprintf(logf, "pid: %d\n\n", cmd.Process.Pid)
+	}
+	return nil
+}
+
+func openLogFile(path string) (*os.File, error) {
+	if path == "" {
+		return nil, nil
+	}
+	return os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
 }
