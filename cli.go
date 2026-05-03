@@ -78,9 +78,9 @@ type BrowserCmd struct {
 }
 
 type BrowserAddCmd struct {
-	Name string `short:"n" required:"" help:"Profile name (e.g. zen-work)"`
-	Path string `short:"x" required:"" help:"Absolute path to the browser binary"`
-	Args []string `short:"a" help:"Arguments passed before the URL; repeat for each arg (e.g. -a -p -a work)"`
+	Name   string   `short:"n" required:"" help:"Profile name (e.g. zen-work)"`
+	Binary string   `short:"x" required:"" help:"Absolute path to the browser binary"`
+	Args   []string `help:"Arguments passed before the URL; repeat for each arg (e.g. --args=-p --args=work)"`
 }
 
 type BrowserDelCmd struct {
@@ -182,7 +182,7 @@ func (c *OpenCmd) Run(ctx *Context) error {
 }
 
 func (c *BrowserAddCmd) Run(ctx *Context) error {
-	return ctx.Repository.AddBrowser(Browser{Name: c.Name, Path: c.Path, Args: c.Args})
+	return ctx.Repository.AddBrowser(Browser{Name: c.Name, Path: c.Binary, Args: c.Args})
 }
 
 func (c *BrowserDelCmd) Run(ctx *Context) error {

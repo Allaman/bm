@@ -66,7 +66,7 @@ Browser profiles map a name to a binary and its arguments. Each `-a` flag is one
 
 ```sh
 # Add a profile
-bm [--path bookmarks.sqlite] browser add --name zen-work --path /Applications/Zen.app/Contents/MacOS/zen -a -p -a work
+bm [--path bookmarks.sqlite] browser add --name zen-work --binary /Applications/Zen.app/Contents/MacOS/zen --args=-p --args=work
 
 # List profiles
 bm [--path bookmarks.sqlite] browser ls
