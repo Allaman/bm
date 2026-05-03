@@ -1,3 +1,9 @@
+## What's Changed in 0.15.0
+* fix: Add wait and debug log to open command by @Allaman
+* docs: Update CHANGELOG by @Allaman
+
+**Full Changelog**: https://github.com/Allaman/bm/compare/0.14.0...0.15.0
+
 ## What's Changed in 0.14.0
 * fix: bookmark arguments by @Allaman
 * chore: Update gitignore by @Allaman
