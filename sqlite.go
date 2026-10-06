@@ -191,8 +191,12 @@ func (r *SQLiteRepository) Update(b Bookmark, updateArchived bool, updateBrowser
 		}
 	}
 
-	if len(updates) == 0 {
+	if len(updates) == 0 && len(b.Tags) == 0 {
 		return fmt.Errorf("no fields to update")
+	}
+	if len(updates) == 0 {
+		// Tags-only update: a no-op assignment keeps the RowsAffected existence check below.
+		updates = append(updates, "name = name")
 	}
 
 	query := "UPDATE bookmarks SET " + strings.Join(updates, ", ") + " WHERE name = ?"

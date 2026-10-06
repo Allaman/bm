@@ -207,7 +207,7 @@ func TestDuplicateTagsIgnored(t *testing.T) {
 	if err := repo.Add(Bookmark{Name: "Go", URL: "https://go.dev", Tags: []string{"Go", "go"}}); err != nil {
 		t.Fatalf("Add() error = %v", err)
 	}
-	if err := repo.Update(Bookmark{Name: "Go", URL: "https://go.dev/", Tags: []string{"Lang", "lang"}}, false, false); err != nil {
+	if err := repo.Update(Bookmark{Name: "Go", Tags: []string{"Lang", "lang"}}, false, false); err != nil {
 		t.Fatalf("Update() error = %v", err)
 	}
 
@@ -217,6 +217,14 @@ func TestDuplicateTagsIgnored(t *testing.T) {
 	}
 	if !slices.Equal(bm.Tags, []string{"lang"}) {
 		t.Errorf("got tags %v, want [lang]", bm.Tags)
+	}
+}
+
+func TestUpdateTagsOnlyNotFound(t *testing.T) {
+	repo := setupTestDB(t)
+
+	if err := repo.Update(Bookmark{Name: "missing", Tags: []string{"x"}}, false, false); err == nil {
+		t.Error("expected error for nonexistent bookmark")
 	}
 }
 
