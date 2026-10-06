@@ -1,3 +1,25 @@
+## What's Changed in 0.15.1
+* chore: Update .gitignore by @Allaman
+* fix: allow updating only a bookmark's tags by @Allaman
+* fix: report rollback errors via named error returns by @Allaman
+* fix: escape URI characters in the database path by @Allaman
+* fix: skip opening the database for the version command by @Allaman
+* fix: ignore duplicate tags that differ only in case by @Allaman
+* chore(deps): Bump github/codeql-action from 4.38.0 to 4.38.2 by @Allaman in [#18](https://github.com/Allaman/bm/pull/18)
+* chore(deps): Bump github/codeql-action from 4.37.9 to 4.38.0 by @Allaman in [#16](https://github.com/Allaman/bm/pull/16)
+* chore(deps): Bump github/codeql-action from 4.37.8 to 4.37.9 by @Allaman in [#15](https://github.com/Allaman/bm/pull/15)
+* chore(deps): Bump github/codeql-action from 4.37.7 to 4.37.8 by @Allaman in [#14](https://github.com/Allaman/bm/pull/14)
+* chore(deps): Bump github/codeql-action from 4.37.6 to 4.37.7 by @Allaman in [#13](https://github.com/Allaman/bm/pull/13)
+* chore(deps): Bump github/codeql-action from 4.37.4 to 4.37.6 by @Allaman in [#12](https://github.com/Allaman/bm/pull/12)
+* chore(deps): Bump github/codeql-action from 4 to 4.37.4 by @Allaman in [#11](https://github.com/Allaman/bm/pull/11)
+* chore(deps): Bump actions/setup-go from 6 to 7 by @Allaman in [#9](https://github.com/Allaman/bm/pull/9)
+* chore(deps): Bump actions/checkout from 6 to 7 by @Allaman in [#8](https://github.com/Allaman/bm/pull/8)
+* chore: markdownlint shenanigens by @Allaman
+* chore: Update markdownlint config by @Allaman
+* docs: Update CHANGELOG by @Allaman
+
+**Full Changelog**: https://github.com/Allaman/bm/compare/0.15.0...0.15.1
+
 ## What's Changed in 0.15.0
 * fix: Add wait and debug log to open command by @Allaman
 * docs: Update CHANGELOG by @Allaman
