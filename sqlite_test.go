@@ -200,6 +200,25 @@ func TestUpdate(t *testing.T) {
 	}
 }
 
+func TestDuplicateTagsIgnored(t *testing.T) {
+	repo := setupTestDB(t)
+
+	if err := repo.Add(Bookmark{Name: "Go", URL: "https://go.dev", Tags: []string{"Go", "go"}}); err != nil {
+		t.Fatalf("Add() error = %v", err)
+	}
+	if err := repo.Update(Bookmark{Name: "Go", URL: "https://go.dev/", Tags: []string{"Lang", "lang"}}, false, false); err != nil {
+		t.Fatalf("Update() error = %v", err)
+	}
+
+	bm, err := repo.Get("Go")
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+	if !slices.Equal(bm.Tags, []string{"lang"}) {
+		t.Errorf("got tags %v, want [lang]", bm.Tags)
+	}
+}
+
 func TestArchivedFiltering(t *testing.T) {
 	repo := setupTestDB(t)
 
