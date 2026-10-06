@@ -16,7 +16,9 @@ type SQLiteRepository struct {
 }
 
 func NewSQLiteRepository(path string) (*SQLiteRepository, error) {
-	db, err := sql.Open("sqlite3", path+"?_foreign_keys=on")
+	// Escape URI-special characters so they are treated as part of the filename.
+	escaped := strings.NewReplacer("%", "%25", "?", "%3f", "#", "%23").Replace(path)
+	db, err := sql.Open("sqlite3", "file:"+escaped+"?_foreign_keys=on")
 	if err != nil {
 		return nil, err
 	}

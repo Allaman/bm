@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 )
@@ -216,6 +217,19 @@ func TestDuplicateTagsIgnored(t *testing.T) {
 	}
 	if !slices.Equal(bm.Tags, []string{"lang"}) {
 		t.Errorf("got tags %v, want [lang]", bm.Tags)
+	}
+}
+
+func TestPathWithQuestionMark(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "a?b.db")
+	repo, err := NewSQLiteRepository(path)
+	if err != nil {
+		t.Fatalf("NewSQLiteRepository() error = %v", err)
+	}
+	defer func() { _ = repo.db.Close() }()
+
+	if _, err := os.Stat(path); err != nil {
+		t.Errorf("database not created at %q: %v", path, err)
 	}
 }
 
