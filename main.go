@@ -14,6 +14,10 @@ func main() {
 		kong.Name("bm"),
 		kong.Description("A minimal bookmarking management CLI"),
 		kong.UsageOnError())
+	if ctx.Command() == "version" {
+		ctx.FatalIfErrorf(ctx.Run())
+		return
+	}
 	repository, err := NewSQLiteRepository(cli.Path)
 	if err != nil {
 		log.Fatal(err)
