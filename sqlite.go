@@ -78,7 +78,7 @@ var (
 	ErrDuplicateBrowser = errors.New("browser profile already exists")
 )
 
-func (r *SQLiteRepository) Add(b Bookmark) error {
+func (r *SQLiteRepository) Add(b Bookmark) (err error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -122,7 +122,7 @@ func (r *SQLiteRepository) Add(b Bookmark) error {
 	return tx.Commit()
 }
 
-func (r *SQLiteRepository) Del(name string) error {
+func (r *SQLiteRepository) Del(name string) (err error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -152,7 +152,7 @@ func (r *SQLiteRepository) Del(name string) error {
 	return tx.Commit()
 }
 
-func (r *SQLiteRepository) Update(b Bookmark, updateArchived bool, updateBrowser bool) error {
+func (r *SQLiteRepository) Update(b Bookmark, updateArchived bool, updateBrowser bool) (err error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
